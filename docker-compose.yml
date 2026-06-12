@@ -54,3 +54,7 @@ services:
 
 volumes:
   airflow-postgres_data:
+
+networks:
+  shared-network:
+    external: true
