@@ -32,11 +32,11 @@ services:
     command: webserver
     ports:
       - 8086:8080
-    #healthcheck:
-    #  test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
-    #  interval: 10s
-    #  timeout: 10s
-    #  retries: 5    
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5    
 
   airflow-scheduler:
     <<: *airflow-common
