@@ -8,9 +8,6 @@ services:
       POSTGRES_DB: airflow
     volumes:
       - airflow-postgres_data:/var/lib/postgresql/data
-    networks:
-      - shared-network
-      - default
       
   x-airflow-common:
     &airflow-common
@@ -28,10 +25,7 @@ services:
       - ./airflow/plugins:/opt/airflow/plugins
     user: "50000:0"
     depends_on:
-      - airflow-postgres
-    networks:
-      - shared-network
-      - default
+      - airflow-postgres   
 
   airflow-webserver:
     <<: *airflow-common
@@ -43,9 +37,6 @@ services:
     #  interval: 10s
     #  timeout: 10s
     #  retries: 5    
-    networks:
-      - shared-network
-      - default
 
   airflow-scheduler:
     <<: *airflow-common
@@ -65,5 +56,6 @@ volumes:
   airflow-postgres_data:
 
 networks:
-  shared-network:
+  bigdata_docker_network:
     external: true
+    name: bigdata_docker_default
