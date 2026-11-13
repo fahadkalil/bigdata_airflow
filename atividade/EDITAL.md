@@ -13,7 +13,7 @@ Em grupo (até 4 alunos), vocês vão montar uma **DAG do Apache Airflow** que f
 ```
 
 **Vale 2 pontos na G2** (nota de trabalho). Aula de abertura: 13/11/2026 (a aula inteira é para a atividade).
-**Prazo de entrega: 23/11/2026, às 23:59.**
+**Prazo de entrega: 22/11/2026 (domingo), às 23:59.**
 
 ## O que entregar
 
