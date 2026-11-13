@@ -84,15 +84,17 @@ zona, valor (decimal), criado_em (timestamp), status, observacao (pode ser nula)
 ### 3. Escrever a DAG
 
 Copie `atividade/modelo_dag.py` para `airflow/dags/dag_grupo.py` e complete os `TODO`. O Airflow relê a pasta a cada ~10 s.
-Roteiro sugerido para a aula (ajuste ao ritmo do grupo):
 
-| Horário | Meta |
-|---|---|
-| 19:35 a 20:05 | grupos formados, ambiente no ar, DAG vazia aparecendo na interface, primeiro Parquet no Alarik |
-| 20:05 a 20:45 | `S3KeySensor` funcionando e task lendo o Parquet com PyArrow |
-| 20:45 a 21:00 | intervalo |
-| 21:00 a 21:35 | publicação no Kafka, mover para `processados/` |
-| 21:35 a 21:50 | `PythonSensor`, combinar o que falta para casa (README, vídeo, `amostra_kafka.json`) |
+Tarefas esperadas:
+
+1. Ambiente no ar (Kafka, Alarik e Airflow) e a DAG do grupo aparecendo na interface do Airflow, sem erro.
+2. Gerar um Parquet do grupo e enviá-lo para `entrada/` no Alarik.
+3. Configurar o `S3KeySensor` para detectar os arquivos `.parquet` em `entrada/`.
+4. Ler o Parquet com PyArrow, em lotes, e serializar cada linha como JSON (atenção a `Decimal` e `datetime`).
+5. Publicar cada linha no tópico Kafka do grupo e dar `flush` ao final.
+6. Mover o arquivo processado de `entrada/` para `processados/`, para que a DAG não o processe de novo.
+7. Criar o `PythonSensor` que confere se as mensagens chegaram ao tópico.
+8. Gerar a amostra (`amostra_kafka.json`), gravar o vídeo ou GIF, preencher o `README.md` e entregar o repositório.
 
 ### 4. Gerar as evidências e a amostra
 
