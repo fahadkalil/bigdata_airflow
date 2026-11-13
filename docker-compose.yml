@@ -1,5 +1,39 @@
-services:  
-  airflow-postgres:    
+# Apache Airflow 2.8.1 + PyArrow + kafka-python (imagem fahadkalil/my-airflow:2.8.1).
+# Conversa com o Kafka (bigdata_docker) e com o Alarik/S3 (bigdata_datalake_docker) pela rede
+# externa bigdata_docker_default: suba o bigdata_docker ANTES (é ele que cria a rede).
+#
+#   cp atividade/.env.exemplo .env     # GRUPO_ID e CHAVE_GRUPO do grupo
+#   docker compose pull                # baixa a imagem pronta (se falhar: docker compose build)
+#   docker compose up -d
+x-airflow-common: &airflow-common
+  image: fahadkalil/my-airflow:2.8.1
+  build: .
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth, airflow.api.auth.backend.session'
+    # Enxerga DAGs novas em ~10 s (o padrão do Airflow é 5 min)
+    AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: '10'
+    AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: '10'
+    # Conexão "alarik_s3" (Admin > Connections) criada por variável de ambiente
+    AIRFLOW_CONN_ALARIK_S3: '{"conn_type":"aws","login":"${ALARIK_ACCESS_KEY:-ALARIKDESAFIO0000001}","password":"${ALARIK_SECRET_KEY:-alarikdesafio-secret-key-0000000000000001}","extra":{"endpoint_url":"http://alarik:8080","region_name":"${ALARIK_REGION:-us-east-1}","config_kwargs":{"s3":{"addressing_style":"path"}}}}'
+    KAFKA_BOOTSTRAP: kafka:9092
+    GRUPO_ID: ${GRUPO_ID:-00}
+    CHAVE_GRUPO: ${CHAVE_GRUPO:-}
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/plugins:/opt/airflow/plugins
+    - ./atividade:/opt/airflow/atividade
+  user: "50000:0"
+  networks:
+    - default
+    - bigdata_docker_network
+
+services:
+  airflow-postgres:
     image: postgres:14.0
     container_name: airflow_postgres
     environment:
@@ -8,54 +42,37 @@ services:
       POSTGRES_DB: airflow
     volumes:
       - airflow-postgres_data:/var/lib/postgresql/data
-      
-  x-airflow-common:
-    &airflow-common
-    image: apache/airflow:2.8.1
-    environment:
-      &airflow-common-env
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow"
-      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-      AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth, airflow.api.auth.backend.session'
-      _PIP_ADDITIONAL_REQUIREMENTS: ""
-    volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - ./airflow/logs:/opt/airflow/logs
-      - ./airflow/plugins:/opt/airflow/plugins
-    user: "50000:0"
-    depends_on:
-      - airflow-postgres
-    networks:
-      - default
-      - bigdata_docker_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-       
+  airflow-init:
+    <<: *airflow-common
+    command: >
+      bash -c "airflow db migrate &&
+      (airflow users create --username admin --password admin --firstname Admin --lastname User
+      --role Admin --email admin@example.com || true)"
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
 
   airflow-webserver:
     <<: *airflow-common
     command: webserver
     ports:
       - 8086:8080
-    #healthcheck:
-    #  test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
-    #  interval: 10s
-    #  timeout: 10s
-    #  retries: 5    
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
 
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
-
-  airflow-init:
-    <<: *airflow-common
-    command: bash -c "airflow db migrate && airflow users create \
-      --username admin \
-      --password admin \
-      --firstname Admin \
-      --lastname User \
-      --role Admin \
-      --email admin@example.com"    
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
 
 volumes:
   airflow-postgres_data:

@@ -4,3 +4,7 @@ __pycache__/
 *$py.class
 
 *.log
+.env
+atividade/saida/
+airflow/logs/*
+!airflow/logs/.gitkeep
