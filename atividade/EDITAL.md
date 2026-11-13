@@ -54,16 +54,16 @@ das linhas identifica de quem é cada mensagem.
 ```bash
 # a ordem importa: a rede bigdata_docker_default é criada pela primeira stack
 cd bigdata_docker             && git pull && docker compose up -d --pull=always kafka kafbat-ui
-cd ../bigdata_datalake_docker && git pull && docker compose up -d --pull=always
+cd ../bigdata_datalake_docker && git pull && docker compose up -d --pull=always --force-recreate
 cd ../bigdata_airflow         && git pull
 cp atividade/.env.exemplo .env          # edite GRUPO_ID (ex.: 07) e CHAVE_GRUPO (da sua folha)
 docker compose pull                      # imagem pronta; se falhar:  docker compose build
-docker compose up -d
+docker compose up -d --force-recreate
 ```
 
 **Esta máquina já rodou o Alarik antes** (outra aula ou outro grupo)? Ele pode ter sido criado com chaves antigas, e o Airflow falha com `InvalidAccessKeyId`.
-Na pasta `bigdata_datalake_docker`, rode `docker compose up -d --force-recreate`. Se continuar falhando:
-`docker compose down -v` e depois `docker compose up -d` (**apaga os dados do Alarik desta máquina**).
+O `--force-recreate` dos comandos acima já recria os contêineres com a configuração atual. Se mesmo assim continuar falhando, na pasta `bigdata_datalake_docker`
+rode `docker compose down -v` e depois `docker compose up -d` (**apaga os dados do Alarik desta máquina**).
 
 Interfaces: **Airflow** http://localhost:8086 (`admin`/`admin`) · **Kafbat** http://localhost:8085 ·
 **Console do Alarik** http://localhost:3000 (`alarik`/`alarik`, bucket `default`).
@@ -111,7 +111,7 @@ Alarik, Airflow e Kafbat.
   Publique **antes** de mover: se a task falhar no meio, o arquivo continua lá e a próxima execução tenta de novo.
 - `json.dumps` quebra com `Decimal` e `datetime` (`TypeError: Object of type Decimal is not JSON serializable`).
   Converta para texto, **sem arredondar nem alterar** (o professor confere a assinatura de cada linha).
-- `InvalidAccessKeyId` ou `403` ao falar com o Alarik: ele foi criado antes com outras chaves. Veja o aviso do passo 1 (`--force-recreate`, e se preciso `down -v`).
+- `InvalidAccessKeyId` ou `403` ao falar com o Alarik: ele foi criado antes com outras chaves. Veja o aviso do passo 1 (se o `--force-recreate` não resolver, `down -v`).
 - Dentro dos contêineres, os endereços são `kafka:9092` e `alarik:8080` (**não** `localhost`). No seu navegador é o contrário.
 - `KafkaProducer.send()` é assíncrono: sem `flush()` a task termina antes das mensagens saírem.
 - Sensor em `mode="poke"` ocupa uma vaga de execução o tempo todo; `mode="reschedule"` libera a vaga entre as verificações.
