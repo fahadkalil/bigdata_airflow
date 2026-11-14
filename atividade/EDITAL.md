@@ -68,7 +68,7 @@ rode `docker compose down -v` e depois `docker compose up -d` (**apaga os dados 
 Interfaces: **Airflow** http://localhost:8086 (`admin`/`admin`) · **Kafbat** http://localhost:8085 ·
 **Console do Alarik** http://localhost:3000 (`alarik`/`alarik`, bucket `default`).
 
-O compose já cria a conexão `alarik_s3` (veja em *Admin → Connections*). A DAG nasce **pausada**: ligue a chave na interface.
+O compose já define a conexão `alarik_s3` por variável de ambiente (`AIRFLOW_CONN_ALARIK_S3`), então ela **não aparece** em *Admin → Connections*; para conferir, rode `docker compose exec airflow-scheduler airflow connections get alarik_s3`. A DAG nasce **pausada**: ligue a chave na interface.
 
 ### 2. Gerar e enviar um Parquet
 

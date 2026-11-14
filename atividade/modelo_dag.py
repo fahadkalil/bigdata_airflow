@@ -24,7 +24,7 @@ from airflow.sensors.python import PythonSensor
 
 # ---------------------------------------------------------------- configuração do grupo
 GRUPO = os.environ.get("GRUPO_ID", "00")
-CONEXAO_S3 = "alarik_s3"                      # já criada pelo docker-compose (Admin > Connections)
+CONEXAO_S3 = "alarik_s3"                      # definida pelo docker-compose (variável AIRFLOW_CONN_ALARIK_S3)
 BUCKET = "default"
 PREFIXO_ENTRADA = "entrada/"
 PREFIXO_PROCESSADOS = "processados/"

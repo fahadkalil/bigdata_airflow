@@ -17,7 +17,9 @@ x-airflow-common: &airflow-common
     # Enxerga DAGs novas em ~10 s (o padrão do Airflow é 5 min)
     AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: '10'
     AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: '10'
-    # Conexão "alarik_s3" (Admin > Connections) criada por variável de ambiente
+    # Conexão "alarik_s3": o próprio Airflow trata qualquer variável AIRFLOW_CONN_<ID> como a conexão <id> (não há outro passo).
+    # Ela NÃO aparece em Admin > Connections (só existe no ambiente). 
+    # Para conferir: docker compose exec airflow-scheduler airflow connections get alarik_s3
     AIRFLOW_CONN_ALARIK_S3: '{"conn_type":"aws","login":"${ALARIK_ACCESS_KEY:-ALARIKDESAFIO0000001}","password":"${ALARIK_SECRET_KEY:-alarikdesafio-secret-key-0000000000000001}","extra":{"endpoint_url":"http://alarik:8080","region_name":"${ALARIK_REGION:-us-east-1}","config_kwargs":{"s3":{"addressing_style":"path"}}}}'
     KAFKA_BOOTSTRAP: kafka:9092
     GRUPO_ID: ${GRUPO_ID:-00}
